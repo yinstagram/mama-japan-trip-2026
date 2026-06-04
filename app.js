@@ -41,9 +41,9 @@
     var jpy=document.getElementById('fxJpy'), hkd=document.getElementById('fxHkd'), rate=document.getElementById('fxRate');
     if(!jpy) return;
     function rt(){ var r=parseFloat(rate.value)||fxRate(); if(r>0) localStorage.setItem(FX_KEY, r); return r; }
-    jpy.addEventListener('input', function(){ var r=rt(); hkd.value = jpy.value ? (parseFloat(jpy.value)/r).toFixed(2) : ''; });
-    hkd.addEventListener('input', function(){ var r=rt(); jpy.value = hkd.value ? Math.round(parseFloat(hkd.value)*r) : ''; });
-    rate.addEventListener('input', function(){ var r=rt(); if(jpy.value) hkd.value=(parseFloat(jpy.value)/r).toFixed(2); });
+    jpy.addEventListener('input', function(){ var r=rt(), v=parseFloat(jpy.value); hkd.value = (jpy.value && isFinite(v)) ? (v/r).toFixed(2) : ''; });
+    hkd.addEventListener('input', function(){ var r=rt(), v=parseFloat(hkd.value); jpy.value = (hkd.value && isFinite(v)) ? Math.round(v*r) : ''; });
+    rate.addEventListener('input', function(){ var r=rt(), v=parseFloat(jpy.value); if(jpy.value && isFinite(v)) hkd.value=(v/r).toFixed(2); });
     var q=document.getElementById('fxQuick'); if(q) q.addEventListener('click', function(){ jpy.value=1000; hkd.value=(1000/rt()).toFixed(2); });
   }
 
@@ -77,6 +77,23 @@
     var dec=document.getElementById('fsDec'), inc=document.getElementById('fsInc');
     if(inc) inc.addEventListener('click', function(){ var i=FS_ORDER.indexOf(curFs()); setFs(FS_ORDER[Math.min(FS_ORDER.length-1, i+1)]); });
     if(dec) dec.addEventListener('click', function(){ var i=FS_ORDER.indexOf(curFs()); setFs(FS_ORDER[Math.max(0, i-1)]); });
+  }
+
+  // ---- 今日 / 安裝提示 ----
+  function todayIndex(){
+    try{ var s=new Date(2026,5,16); s.setHours(0,0,0,0); var n=new Date(); n.setHours(0,0,0,0);
+      var d=Math.round((n-s)/86400000); return (d>=0 && d<6) ? d : -1; }catch(e){ return -1; }
+  }
+  function isStandalone(){ return (window.navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); }
+  var HINT_KEY='mama_hint_install';
+  function installHintHTML(){
+    if(isStandalone()) return '';
+    try{ if(localStorage.getItem(HINT_KEY)) return ''; }catch(e){}
+    return '<div class="hint" id="installHint"><span class="hint__txt">💡 想變 app 放主畫面？撳下面【分享】→【加入主畫面】，之後冇網都開到。</span><button class="hint__x" id="hintX" type="button" aria-label="關閉">×</button></div>';
+  }
+  function bindHint(){
+    var x=document.getElementById('hintX');
+    if(x) x.addEventListener('click', function(){ try{ localStorage.setItem(HINT_KEY,'1'); }catch(e){} var h=document.getElementById('installHint'); if(h) h.remove(); });
   }
 
   // ============ DAYS ============
@@ -146,19 +163,22 @@
       '</div>';
     }).join('') +'</div>';
 
+    var ti = todayIndex(), startIdx = ti >= 0 ? ti : 0;
     var strip = '<div class="daystrip" id="daystrip">'+ T.days.map(function(d,i){
-      return '<button class="daypill'+(i===0?' is-active':'')+'" data-day="'+i+'" type="button">'+
+      return '<button class="daypill'+(i===startIdx?' is-active':'')+(i===ti?' is-today':'')+'" data-day="'+i+'" type="button">'+
         '<span class="daypill__seal">'+d.n+'</span>'+
-        '<span class="daypill__lbl">'+esc(d.date)+' '+esc(d.dow)+'</span>'+
+        '<span class="daypill__lbl">'+(i===ti ? '今日' : esc(d.date)+' '+esc(d.dow))+'</span>'+
       '</button>';
     }).join('') +'</div>';
 
     view.innerHTML =
+      installHintHTML() +
       '<div class="view__head"><p class="view__eyebrow">行程</p><h2 class="view__title">六日 · 逐日睇</h2>'+
       '<p class="view__sub">撳個朱印日子睇當日安排。每格撳一下展開詳情。</p></div>'+
       alerts + strip + '<div id="dayWrap"></div>'+
       '<p class="footer-note">'+esc(T.meta.updated)+'　·　'+esc(T.meta.note)+'<br><b>祝媽媽旅途平安快樂 🌸</b></p>';
 
+    bindHint();
     var pills = view.querySelectorAll('.daypill');
     pills.forEach(function(p){
       p.addEventListener('click', function(){
@@ -168,7 +188,8 @@
         p.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
       });
     });
-    renderDay(0);
+    renderDay(startIdx);
+    if (startIdx > 0 && pills[startIdx]) pills[startIdx].scrollIntoView({ inline:'center', block:'nearest' });
   }
 
   function bindTimeline(scope){

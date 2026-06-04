@@ -358,6 +358,20 @@ html[data-fs="xl"]{ font-size:21.5px; }
 /* link action */
 .act--link{ color:var(--torii-deep); border-color:color-mix(in oklch,var(--torii) 26%, var(--line)); background:var(--torii-wash); }
 
+/* install hint */
+.hint{ display:flex; align-items:flex-start; gap:var(--s3); background:var(--indigo-wash); border:1px solid color-mix(in oklch,var(--indigo) 22%, var(--line)); border-radius:var(--radius); padding:var(--s3) var(--s4); margin-bottom:var(--s4); }
+.hint__txt{ flex:1; font-size:.8rem; color:var(--indigo); line-height:1.5; }
+.hint__x{ flex:none; font-size:1.2rem; color:var(--indigo); line-height:1; padding:0 2px; opacity:.65; }
+.hint__x:active{ opacity:1; }
+
+/* 今日 印章 */
+.daypill.is-today .daypill__seal{ box-shadow:0 0 0 3px var(--torii-wash), var(--shadow-sm); }
+.daypill.is-today:not(.is-active) .daypill__seal{ border-color:var(--torii); }
+.daypill.is-today .daypill__lbl{ color:var(--torii-deep); font-weight:700; }
+
+/* flight time no-wrap */
+.t-flight__time{ white-space:nowrap; }
+
 /* ============ print / PDF ============ */
 .printing .masthead, .printing .tabbar{ display:none; }
 .printing .app{ max-width:none; padding-bottom:0; }
