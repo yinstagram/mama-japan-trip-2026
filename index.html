@@ -27,11 +27,11 @@
       <h1 class="masthead__name">媽媽の<span>しおり</span></h1>
     </div>
     <div class="masthead__tools">
+      <button class="notebtn" id="noteBtn" type="button" aria-label="注意事項"><span aria-hidden="true">⚠️</span><span class="notebtn__n" id="noteN" hidden></span></button>
       <div class="fsctl" role="group" aria-label="字體大細">
         <button id="fsDec" type="button" aria-label="細啲字">A−</button>
         <button id="fsInc" type="button" aria-label="大啲字">A＋</button>
       </div>
-      <button class="masthead__offline" id="offlineBadge" title="離線狀態" aria-live="polite"></button>
     </div>
   </header>
 
@@ -43,6 +43,15 @@
     <button class="tab" data-tab="checklist"><span class="tab__ico" aria-hidden="true">✓</span><span class="tab__txt">清單</span></button>
     <button class="tab" data-tab="sos"><span class="tab__ico" aria-hidden="true">☎</span><span class="tab__txt">緊急</span></button>
   </nav>
+
+  <div class="notesheet" id="noteSheet" hidden>
+    <div class="notesheet__backdrop" id="noteBackdrop"></div>
+    <div class="notesheet__panel" role="dialog" aria-modal="true" aria-label="注意事項">
+      <div class="notesheet__grip"></div>
+      <div class="notesheet__head"><h2 id="noteTitle">⚠️ 注意事項</h2><button class="notesheet__x" id="noteClose" type="button" aria-label="關閉">×</button></div>
+      <div class="notesheet__body" id="noteBody"></div>
+    </div>
+  </div>
 
 </div>
 
