@@ -287,6 +287,7 @@ a{ color:var(--indigo); text-underline-offset:3px; }
 .note-card{ padding:var(--s4); background:var(--panel-sink); border:1px solid var(--line); border-radius:var(--radius); margin-bottom:var(--s2); }
 .note-card h4{ font-size:.84rem; display:flex; gap:7px; align-items:center; margin-bottom:5px; }
 .note-card p{ font-size:.83rem; color:var(--ink-2); line-height:1.55; }
+.note-card .pre{ white-space:pre-line; }
 
 /* ============ tabbar ============ */
 .tabbar{

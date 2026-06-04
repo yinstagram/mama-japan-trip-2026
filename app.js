@@ -311,11 +311,13 @@
       '<p class="view__sub">撳個號碼即刻打。下面有日文短句俾媽媽指俾人睇。</p></div>'+
       '<div class="sectionlabel">💱 匯率計算機</div>'+ fxWidget() +
       '<div class="sectionlabel">電話（撳即打）</div>'+ tels +
+      (em.medicalCard ? '<div class="sectionlabel">🩺 病歷卡（俾醫護睇）</div><div class="note-card"><p class="pre">'+esc(em.medicalCard)+'</p></div>' : '')+
       '<div class="sectionlabel">日文短句</div>'+ phr +
       '<div class="sectionlabel">實用</div>'+
       '<div class="note-card"><h4>💊 藥房</h4><p>'+esc(em.pharmacy)+'</p></div>'+
       '<div class="note-card"><h4>🚻 廁所</h4><p>'+esc(em.toilet)+'</p></div>'+
       '<div class="note-card"><h4>📶 上網</h4><p>'+esc(em.sim)+'</p></div>'+
+      (em.lost ? '<div class="note-card"><h4>🆘 唔見嘢 / 被偷</h4><p>'+esc(em.lost)+'</p></div>' : '')+
       '<div class="note-card"><h4>🌦️ 天氣</h4><p>'+esc(T.weather)+'</p></div>';
     bindFx();
   }
@@ -429,6 +431,7 @@
 
   applyFs(curFs());
   bindFs();
+  updNoteCount();
   if (location.search.indexOf('print') > -1 || location.hash === '#print') {
     document.body.classList.add('printing');
     renderPrint();
