@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#c1492d"/>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <defs>
+    <radialGradient id="g" cx="34%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#d65a3a"/>
+      <stop offset="100%" stop-color="#b03f26"/>
+    </radialGradient>
+  </defs>
+  <rect x="44" y="44" width="424" height="424" rx="60" fill="none" stroke="#f3ece0" stroke-opacity="0.28" stroke-width="6"/>
+  <text x="256" y="258" text-anchor="middle" dominant-baseline="central"
+        font-family="Hiragino Mincho ProN, Yu Mincho, Songti TC, serif"
+        font-size="300" font-weight="600" fill="#f4ede1" letter-spacing="0">旅</text>
+</svg>

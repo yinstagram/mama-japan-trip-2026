@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#f3ece0">
+<meta name="description" content="媽媽栃木・茨城 6 日離線行程手帳">
+<title>媽媽の栃木・茨城｜旅のしおり</title>
+
+<!-- PWA / iOS add-to-home -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="媽媽旅程">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="masthead">
+    <div class="masthead__seal" aria-hidden="true">旅</div>
+    <div class="masthead__title">
+      <p class="masthead__kicker">栃木 · 茨城　六日</p>
+      <h1 class="masthead__name">媽媽の<span>しおり</span></h1>
+    </div>
+    <div class="masthead__tools">
+      <div class="fsctl" role="group" aria-label="字體大細">
+        <button id="fsDec" type="button" aria-label="細啲字">A−</button>
+        <button id="fsInc" type="button" aria-label="大啲字">A＋</button>
+      </div>
+      <button class="masthead__offline" id="offlineBadge" title="離線狀態" aria-live="polite"></button>
+    </div>
+  </header>
+
+  <main class="view" id="view" tabindex="-1"><!-- rendered by app.js --></main>
+
+  <nav class="tabbar" id="tabbar" aria-label="主導覽">
+    <button class="tab is-active" data-tab="days"  aria-current="page"><span class="tab__ico" aria-hidden="true">🗓️</span><span class="tab__txt">行程</span></button>
+    <button class="tab" data-tab="transit"><span class="tab__ico" aria-hidden="true">🚆</span><span class="tab__txt">交通</span></button>
+    <button class="tab" data-tab="checklist"><span class="tab__ico" aria-hidden="true">✓</span><span class="tab__txt">清單</span></button>
+    <button class="tab" data-tab="sos"><span class="tab__ico" aria-hidden="true">☎</span><span class="tab__txt">緊急</span></button>
+  </nav>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator && location.search.indexOf('print') < 0 && location.hash !== '#print') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>
