@@ -369,7 +369,7 @@
   var AI_MSGS = [];   // {role:'user'|'assistant', content:string}
   var AI_BUSY = false;
   var AI_EP   = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-  var AI_MOD  = 'glm-z1-plus';
+  var AI_MOD  = 'glm-5.1';
 
   function buildSystemPrompt(){
     var di = todayIndex();
@@ -388,6 +388,7 @@
       '3. 如果係打招呼/分享狀況（唔係問問題），自然親切回應，唔需硬套行程資料。',
       '4. 真係完全超出行程範圍先答「呢個行程冇記錄，建議問酒店前台或用Google」。',
       '5. 緊急情況優先給出相關電話。',
+      '6. 🚫 絕對禁止自行補充任何行程冇記錄嘅具體資料——包括酒店名稱、地址、電話、店名、交通班次等。唔知就直接答「行程冇記錄呢個資料，建議向當地查詢」，唔好估、唔好填空。',
       ''
     ];
 
