@@ -395,8 +395,20 @@
     // 去程航班
     p.push('【去程航班（Day1出發）】');
     p.push(f.airline+' | '+f.route+' | 時間：'+f.time+' | '+f.terminal);
+    if(f.passengers) p.push('乘客：'+f.passengers);
+    if(f.baggage) p.push('行李：'+f.baggage);
     f.notes.forEach(function(n){ p.push('・'+n); });
     p.push('');
+
+    // 回程航班
+    var rf = T.transport.returnFlight;
+    if(rf){
+      p.push('【回程航班（Day6 '+rf.date+'）】');
+      p.push(rf.airline+' | '+rf.route+' | 時間：'+rf.time+' | '+rf.terminal);
+      if(rf.passengers) p.push('乘客：'+rf.passengers);
+      rf.notes.forEach(function(n){ p.push('・'+n); });
+      p.push('');
+    }
 
     // 重要提示
     p.push('【重要注意事項】');
