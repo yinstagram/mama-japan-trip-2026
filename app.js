@@ -570,7 +570,7 @@
     fetch(AI_EP, {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.7, max_tokens:2000 })
+      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.7, max_tokens:4000 })
     }).then(function(r){
       if(!r.ok) return r.json().then(function(d){ throw new Error((d.error&&(d.error.message||d.error.code))||'HTTP '+r.status); });
       return r.json();
