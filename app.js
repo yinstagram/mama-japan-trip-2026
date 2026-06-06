@@ -369,21 +369,40 @@
   var AI_MSGS = [];   // {role:'user'|'assistant', content:string}
   var AI_BUSY = false;
   var AI_EP   = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-  var AI_MOD  = 'glm-4-flash';
+  var AI_MOD  = 'glm-z1-plus';
 
   function buildSystemPrompt(){
     var di = todayIndex();
-    var todayStr = di >= 0 ? 'Day'+T.days[di].n+'（'+T.days[di].date+' '+T.days[di].dow+' '+T.days[di].city+'）' : '行程前或結束後';
+    var todayStr = di >= 0
+      ? 'Day'+T.days[di].n+'（'+T.days[di].date+' '+T.days[di].dow+' '+T.days[di].city+'）'
+      : '行程前或結束後';
+    var f = T.transport.flight;
     var p = [
-      '你係一個專屬旅遊助手，服務一位香港60歲以上嘅媽媽喺日本栃木·茨城旅行（'+T.meta.dates+'，路線：'+T.meta.route+'）。',
-      '今日係：'+todayStr+'。全部酒店已訂好：Day1-2住宇都宮、Day3-4住水戶、Day5-6住土浦。',
-      '請用繁體中文（廣東話口語）回答，要簡短清楚（最多150字），直接答問題。',
-      '緊急情況優先給出相關電話。如果問題超出行程範圍就答「行程冇記錄，建議問酒店前台」。',
+      '你係一個專屬旅遊助手，服務一位香港60歲以上嘅媽媽喺日本旅行。',
+      '行程：'+T.meta.dates+'，路線：'+T.meta.route+'。今日：'+todayStr+'。',
+      '酒店全訂好：Day1-2住宇都宮、Day3-4住水戶、Day5-6住土浦。',
+      '',
+      '【回答規則】',
+      '1. 繁體中文廣東話口語，最多200字，直接清楚。',
+      '2. 根據以下完整資料作答，要靈活推理，唔好死板。',
+      '3. 如果係打招呼/分享狀況（唔係問問題），自然親切回應，唔需硬套行程資料。',
+      '4. 真係完全超出行程範圍先答「呢個行程冇記錄，建議問酒店前台或用Google」。',
+      '5. 緊急情況優先給出相關電話。',
       ''
     ];
-    p.push('【重要注意事項】');
-    T.alerts.forEach(function(a){ p.push(a.icon+' '+a.title+'：'+a.text.slice(0,100)); });
+
+    // 去程航班
+    p.push('【去程航班（Day1出發）】');
+    p.push(f.airline+' | '+f.route+' | 時間：'+f.time+' | '+f.terminal);
+    f.notes.forEach(function(n){ p.push('・'+n); });
     p.push('');
+
+    // 重要提示
+    p.push('【重要注意事項】');
+    T.alerts.forEach(function(a){ p.push(a.icon+' '+a.title+'：'+a.text.slice(0,120)); });
+    p.push('');
+
+    // 逐日行程
     p.push('【逐日行程】');
     T.days.forEach(function(d){
       p.push('--- Day'+d.n+' '+d.date+'（'+d.dow+'）'+d.city+' — '+d.title+' ---');
@@ -394,26 +413,60 @@
         if(it.hours) s += ' 開放:'+it.hours;
         if(it.closed) s += ' 休:'+it.closed;
         if(it.price) s += ' 費:'+it.price;
-        if(it.booking) s += ' 訂:'+it.booking;
-        if(it.desc) s += '\n  '+it.desc.slice(0,120)+(it.desc.length>120?'…':'');
-        if(it.phone) s += ' 電話:'+it.phone;
+        if(it.booking) s += ' 預約:'+it.booking;
+        if(it.desc) s += '\n  說明:'+it.desc.slice(0,130)+(it.desc.length>130?'…':'');
+        if(it.phone) s += ' 電:'+it.phone;
         p.push(s);
       });
-      if(d.rainPlan) p.push('落雨後備：'+d.rainPlan.slice(0,80)+'…');
+      if(d.rainPlan) p.push('☔落雨後備：'+d.rainPlan.slice(0,100));
     });
     p.push('');
-    p.push('【城際交通】');
+
+    // 城際交通
+    p.push('【城際交通（各段車程）】');
     T.transport.legs.forEach(function(l){
-      p.push(l.d+' '+l.from+'→'+l.to+' '+l.mode+' '+l.fare+(l.ic?' (IC可用)':' (淨現金)')+'\n  '+l.note.slice(0,100));
+      p.push(l.d+' '+l.from+'→'+l.to+' ['+l.mode+'] 票價:'+l.fare+(l.ic?' IC可用':' 需現金'));
+      if(l.note) p.push('  '+l.note.slice(0,130));
     });
     p.push('');
+
+    // 回程
     p.push('【回程方案（土浦→成田）】');
     T.transport.returnOptions.forEach(function(r){
-      p.push(r.rank+' '+r.title+' '+r.fare+'\n  '+r.detail.slice(0,150)+(r.booking?'\n  訂法：'+r.booking:''));
+      p.push('['+r.rank+'] '+r.title+' '+r.fare);
+      if(r.detail) p.push('  '+r.detail.slice(0,160));
+      if(r.booking) p.push('  訂法：'+r.booking);
     });
     p.push('');
+
+    // IC卡
+    if(T.transport.icCard){
+      p.push('【IC卡資訊】');
+      p.push(T.transport.icCard.slice(0,200));
+      p.push('');
+    }
+
+    // Booking清單
+    if(T.booking && T.booking.length){
+      p.push('【出發前訂位清單】');
+      T.booking.forEach(function(b){
+        p.push('['+b.tag+'] '+b.item+'：'+b.how.slice(0,80));
+      });
+      p.push('');
+    }
+
+    // 緊急電話
     p.push('【緊急電話】');
-    T.emergency.phones.forEach(function(ph){ p.push(ph.label+' '+ph.num+'（'+ph.note+'）'); });
+    T.emergency.phones.forEach(function(ph){
+      p.push(ph.label+' '+ph.num+(ph.note?' ('+ph.note+')':''));
+    });
+
+    // 天氣
+    if(T.weather){
+      p.push('');
+      p.push('【天氣】'+T.weather.slice(0,200));
+    }
+
     return p.join('\n');
   }
 
@@ -495,7 +548,7 @@
       msgsEl.innerHTML = aiMsgListHtml();
       var loadDiv = document.createElement('div');
       loadDiv.className = 'msg msg--ai';
-      loadDiv.innerHTML = '<div class="msg__bubble"><span class="ai-dots"><span></span><span></span><span></span></span></div>';
+      loadDiv.innerHTML = '<div class="msg__bubble"><span class="ai-thinking">思考中</span><span class="ai-dots"><span></span><span></span><span></span></span></div>';
       msgsEl.appendChild(loadDiv);
     }
     scrollAIBottom();
@@ -516,18 +569,21 @@
     fetch(AI_EP, {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.6, max_tokens:400 })
+      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.7, max_tokens:600 })
     }).then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status);
+      if(!r.ok) return r.json().then(function(d){ throw new Error((d.error&&(d.error.message||d.error.code))||'HTTP '+r.status); });
       return r.json();
     }).then(function(d){
       AI_BUSY = false;
+      if(d.error){ throw new Error(d.error.message||d.error.code||'API error'); }
       var reply = d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
       AI_MSGS.push({role:'assistant', content: reply || '⚠️ 收唔到回應，請重試。'});
       refreshAIMsgs();
     }).catch(function(err){
       AI_BUSY = false;
-      var msg = navigator.onLine === false ? '❌ 冇網絡，AI 助手需要網絡先可以用。' : '❌ 服務暫時有問題，請稍後再試。';
+      var msg = navigator.onLine === false
+        ? '❌ 冇網絡，AI 助手需要網絡先可以用。'
+        : '❌ ' + (err.message || '服務暫時有問題，請稍後再試。');
       AI_MSGS.push({role:'assistant', content: msg});
       refreshAIMsgs();
     });
