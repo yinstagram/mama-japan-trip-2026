@@ -1,5 +1,5 @@
 /* 媽媽の栃木・茨城 — Service Worker (offline-first) */
-var CACHE = 'mama-trip-v10';
+var CACHE = 'mama-trip-v11';
 var ASSETS = [
   './',
   './index.html',

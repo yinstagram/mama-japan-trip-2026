@@ -570,7 +570,7 @@
     fetch(AI_EP, {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.7, max_tokens:600 })
+      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.7, max_tokens:2000 })
     }).then(function(r){
       if(!r.ok) return r.json().then(function(d){ throw new Error((d.error&&(d.error.message||d.error.code))||'HTTP '+r.status); });
       return r.json();
@@ -582,9 +582,12 @@
       refreshAIMsgs();
     }).catch(function(err){
       AI_BUSY = false;
+      var isLocal = location.hostname==='localhost'||location.hostname==='127.0.0.1';
       var msg = navigator.onLine === false
         ? '❌ 冇網絡，AI 助手需要網絡先可以用。'
-        : '❌ ' + (err.message || '服務暫時有問題，請稍後再試。');
+        : isLocal
+          ? '⚠️ 本地預覽唔支援 AI（瀏覽器安全限制），請用 iPhone 開 GitHub Pages 測試。'
+          : '❌ ' + (err.message || '服務暫時有問題，請稍後再試。');
       AI_MSGS.push({role:'assistant', content: msg});
       refreshAIMsgs();
     });
