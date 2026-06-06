@@ -302,7 +302,7 @@ a{ color:var(--indigo); text-underline-offset:3px; }
 }
 .tab{ display:grid; justify-items:center; gap:3px; padding:var(--s3) 0 var(--s2); color:var(--ink-3); transition:color .2s; position:relative; }
 .tab__ico{ font-size:1.2rem; line-height:1; transition:transform .2s; }
-.tab__txt{ font-size:.66rem; letter-spacing:.06em; font-weight:600; }
+.tab__txt{ font-size:.62rem; letter-spacing:.04em; font-weight:600; white-space:nowrap; }
 .tab.is-active{ color:var(--torii); }
 .tab.is-active .tab__ico{ transform:translateY(-1px) scale(1.08); }
 .tab.is-active::before{ content:""; position:absolute; top:0; width:26px; height:2.5px; border-radius:0 0 3px 3px; background:var(--torii); }
