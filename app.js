@@ -22,6 +22,7 @@
   // ---- helpers ----
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function mapHref(q){ return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q); }
+  function routeHref(o, d){ return 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(o) + '&destination=' + encodeURIComponent(d) + '&travelmode=transit'; }
   function telHref(n){ return 'tel:' + String(n).replace(/[^0-9+]/g,''); }
   function badge(st){ var m = ST[st] || ST.ok; return '<span class="badge" data-st="'+st+'">'+m.e+' '+m.t+'</span>'; }
   function fact(label, val, cls){ if(!val) return ''; return '<span class="fact '+(cls||'')+'"><span>'+label+'</span><b>'+esc(val)+'</b></span>'; }
@@ -114,7 +115,8 @@
       ? '<ul class="tl__tips">' + it.tips.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('') + '</ul>' : '';
     var warnnote = it.warnNote ? '<div class="tl__warnnote">⚠️ '+esc(it.warnNote)+'</div>' : '';
     var ab = '';
-    if (it.map)  ab += '<a class="act act--map" target="_blank" rel="noopener" href="'+mapHref(it.map)+'">🗺️ 地圖</a>';
+    if (it.map)  ab += '<a class="act act--map" target="_blank" rel="noopener" href="'+mapHref(it.map)+'">'+(it.mapLabel||'🗺️ 地圖')+'</a>';
+    if (it.routeO && it.routeD) ab += '<a class="act act--route" target="_blank" rel="noopener" href="'+routeHref(it.routeO, it.routeD)+'">🗺️ 路線</a>';
     if (it.phone) ab += '<a class="act act--call" href="'+telHref(it.phone)+'">📞 '+esc(it.phone)+'</a>';
     if (it.link) ab += '<a class="act act--link" target="_blank" rel="noopener" href="'+esc(it.link)+'">🔗 '+esc(it.linkLabel||'官網')+'</a>';
     if (di != null) ab += '<button class="act act--flag'+(mk?' is-on':'')+'" data-di="'+di+'" data-ti="'+ti+'" type="button">🚩 '+(mk?'已標記':'標記注意')+'</button>';
@@ -223,6 +225,10 @@
           '<span class="fact">IC <b class="'+(l.ic?'ic-yes':'ic-no')+'">'+(l.ic?'可用':'唔收·現金')+'</b></span>'+
         '</div>'+
         '<div class="leg__note">'+esc(l.note)+'</div>'+
+        ((l.routeO && l.routeD) || l.map ? '<div class="actions">'+
+          (l.routeO && l.routeD ? '<a class="act act--route" target="_blank" rel="noopener" href="'+routeHref(l.routeO, l.routeD)+'">🗺️ 路線</a>' : '')+
+          (l.map ? '<a class="act act--map" target="_blank" rel="noopener" href="'+mapHref(l.map)+'">🚌 上車點</a>' : '')+
+        '</div>' : '')+
       '</div>';
     }).join('');
 
@@ -234,6 +240,7 @@
         '<div class="ret__detail">'+esc(r.detail)+'</div>'+
         (r.booking ? '<div class="ret__booking">📌 '+esc(r.booking)+'</div>' : '')+
         (r.warn ? '<div class="ret__detail">⚠️ '+esc(r.warn)+'</div>' : '')+
+        (r.map ? '<div class="actions"><a class="act act--map" target="_blank" rel="noopener" href="'+mapHref(r.map)+'">🚌 上車點</a></div>' : '')+
       '</div>';
     }).join('');
 

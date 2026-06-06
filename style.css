@@ -212,6 +212,7 @@ a{ color:var(--indigo); text-underline-offset:3px; }
 .act{ display:inline-flex; align-items:center; gap:6px; font-size:.8rem; font-weight:600; padding:9px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); transition:transform .12s, background .2s; }
 .act:active{ transform:scale(.96); }
 .act--map{ color:var(--indigo); border-color:color-mix(in oklch,var(--indigo) 30%, var(--line)); }
+.act--route{ color:var(--torii); border-color:color-mix(in oklch,var(--torii) 30%, var(--line)); }
 .act--call{ color:var(--paper); background:var(--torii); border-color:var(--torii); }
 
 /* blocks at day bottom */
