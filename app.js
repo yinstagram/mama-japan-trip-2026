@@ -365,8 +365,183 @@
       '</div>';
   }
 
+  // ============ AI 旅遊助手 ============
+  var AI_MSGS = [];   // {role:'user'|'assistant', content:string}
+  var AI_BUSY = false;
+  var AI_EP   = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+  var AI_MOD  = 'glm-4-flash';
+
+  function buildSystemPrompt(){
+    var di = todayIndex();
+    var todayStr = di >= 0 ? 'Day'+T.days[di].n+'（'+T.days[di].date+' '+T.days[di].dow+' '+T.days[di].city+'）' : '行程前或結束後';
+    var p = [
+      '你係一個專屬旅遊助手，服務一位香港60歲以上嘅媽媽喺日本栃木·茨城旅行（'+T.meta.dates+'，路線：'+T.meta.route+'）。',
+      '今日係：'+todayStr+'。全部酒店已訂好：Day1-2住宇都宮、Day3-4住水戶、Day5-6住土浦。',
+      '請用繁體中文（廣東話口語）回答，要簡短清楚（最多150字），直接答問題。',
+      '緊急情況優先給出相關電話。如果問題超出行程範圍就答「行程冇記錄，建議問酒店前台」。',
+      ''
+    ];
+    p.push('【重要注意事項】');
+    T.alerts.forEach(function(a){ p.push(a.icon+' '+a.title+'：'+a.text.slice(0,100)); });
+    p.push('');
+    p.push('【逐日行程】');
+    T.days.forEach(function(d){
+      p.push('--- Day'+d.n+' '+d.date+'（'+d.dow+'）'+d.city+' — '+d.title+' ---');
+      p.push('概要：'+d.summary);
+      d.timeline.forEach(function(it){
+        var s = it.time+' '+it.title;
+        if(it.jp) s += '（'+it.jp+'）';
+        if(it.hours) s += ' 開放:'+it.hours;
+        if(it.closed) s += ' 休:'+it.closed;
+        if(it.price) s += ' 費:'+it.price;
+        if(it.booking) s += ' 訂:'+it.booking;
+        if(it.desc) s += '\n  '+it.desc.slice(0,120)+(it.desc.length>120?'…':'');
+        if(it.phone) s += ' 電話:'+it.phone;
+        p.push(s);
+      });
+      if(d.rainPlan) p.push('落雨後備：'+d.rainPlan.slice(0,80)+'…');
+    });
+    p.push('');
+    p.push('【城際交通】');
+    T.transport.legs.forEach(function(l){
+      p.push(l.d+' '+l.from+'→'+l.to+' '+l.mode+' '+l.fare+(l.ic?' (IC可用)':' (淨現金)')+'\n  '+l.note.slice(0,100));
+    });
+    p.push('');
+    p.push('【回程方案（土浦→成田）】');
+    T.transport.returnOptions.forEach(function(r){
+      p.push(r.rank+' '+r.title+' '+r.fare+'\n  '+r.detail.slice(0,150)+(r.booking?'\n  訂法：'+r.booking:''));
+    });
+    p.push('');
+    p.push('【緊急電話】');
+    T.emergency.phones.forEach(function(ph){ p.push(ph.label+' '+ph.num+'（'+ph.note+'）'); });
+    return p.join('\n');
+  }
+
+  function aiBubbleContent(text){
+    return esc(text).replace(/\n/g,'<br>');
+  }
+
+  function aiMsgListHtml(){
+    if(!AI_MSGS.length){
+      return '<div class="ai-empty">'+
+        '<p>👋 你好！我係你嘅旅遊助手 🎌</p>'+
+        '<p><strong>有咩問題儘管問，例如：</strong></p>'+
+        '<ul>'+
+          '<li>今晚我住喺邊間酒店？</li>'+
+          '<li>而家應該搭咩車去大洗？</li>'+
+          '<li>大谷資料館幾點閂？要唔要訂位？</li>'+
+          '<li>去魚市場點去？</li>'+
+        '</ul>'+
+      '</div>';
+    }
+    return AI_MSGS.map(function(m){
+      return '<div class="msg msg--'+m.role+'"><div class="msg__bubble">'+aiBubbleContent(m.content)+'</div></div>';
+    }).join('');
+  }
+
+  function renderAI(){
+    view.innerHTML =
+      '<div class="view__head">'+
+        '<p class="view__eyebrow">AI 旅遊助手</p>'+
+        '<h2 class="view__title">問路・問資訊</h2>'+
+        '<p class="view__sub">根據你嘅行程即時回答，需要網絡。</p>'+
+      '</div>'+
+      (AI_MSGS.length ? '<button class="chat__clear" id="aiClear" type="button">清除對話</button>' : '')+
+      '<div class="chat">'+
+        '<div class="chat__msgs" id="chatMsgs">'+aiMsgListHtml()+'</div>'+
+      '</div>'+
+      '<form class="chat__form" id="chatForm">'+
+        '<input class="chat__input" id="chatInput" type="text" placeholder="問你想知嘅事..." autocomplete="off" enterkeyhint="send">'+
+        '<button class="chat__send" id="chatSend" type="submit">送出</button>'+
+      '</form>';
+
+    var form = document.getElementById('chatForm');
+    if(form) form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var inp = document.getElementById('chatInput');
+      var q = (inp.value||'').trim();
+      if(!q || AI_BUSY) return;
+      inp.value = '';
+      sendAIMsg(q);
+    });
+
+    var clr = document.getElementById('aiClear');
+    if(clr) clr.addEventListener('click', function(){
+      AI_MSGS = [];
+      renderAI();
+    });
+
+    scrollAIBottom();
+  }
+
+  function scrollAIBottom(){
+    setTimeout(function(){
+      var el = document.getElementById('chatMsgs');
+      if(el) el.lastElementChild && el.lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 80);
+  }
+
+  function sendAIMsg(q){
+    AI_BUSY = true;
+    AI_MSGS.push({role:'user', content:q});
+
+    var msgsEl = document.getElementById('chatMsgs');
+    var sendBtn = document.getElementById('chatSend');
+    if(sendBtn) sendBtn.disabled = true;
+
+    if(msgsEl){
+      msgsEl.innerHTML = aiMsgListHtml();
+      var loadDiv = document.createElement('div');
+      loadDiv.className = 'msg msg--ai';
+      loadDiv.innerHTML = '<div class="msg__bubble"><span class="ai-dots"><span></span><span></span><span></span></span></div>';
+      msgsEl.appendChild(loadDiv);
+    }
+    scrollAIBottom();
+
+    var key = (T.meta && T.meta.aiKey) || '';
+    if(!key){
+      AI_BUSY = false;
+      AI_MSGS.push({role:'assistant', content:'❌ AI Key 未設定，請聯絡 Yin。'});
+      refreshAIMsgs();
+      return;
+    }
+
+    var history = AI_MSGS.slice(0, -1); // exclude the just-pushed user msg we'll send last
+    var messages = [{role:'system', content:buildSystemPrompt()}]
+      .concat(history.map(function(m){ return {role:m.role, content:m.content}; }))
+      .concat([{role:'user', content:q}]);
+
+    fetch(AI_EP, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body: JSON.stringify({ model:AI_MOD, messages:messages, temperature:0.6, max_tokens:400 })
+    }).then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    }).then(function(d){
+      AI_BUSY = false;
+      var reply = d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+      AI_MSGS.push({role:'assistant', content: reply || '⚠️ 收唔到回應，請重試。'});
+      refreshAIMsgs();
+    }).catch(function(err){
+      AI_BUSY = false;
+      var msg = navigator.onLine === false ? '❌ 冇網絡，AI 助手需要網絡先可以用。' : '❌ 服務暫時有問題，請稍後再試。';
+      AI_MSGS.push({role:'assistant', content: msg});
+      refreshAIMsgs();
+    });
+  }
+
+  function refreshAIMsgs(){
+    var msgsEl = document.getElementById('chatMsgs');
+    var sendBtn = document.getElementById('chatSend');
+    if(sendBtn) sendBtn.disabled = false;
+    if(msgsEl) msgsEl.innerHTML = aiMsgListHtml();
+    scrollAIBottom();
+  }
+
   // ============ router ============
-  var R = { days: renderDays, transit: renderTransit, checklist: renderChecklist, sos: renderSos };
+  var R = { days: renderDays, transit: renderTransit, checklist: renderChecklist, sos: renderSos, ai: renderAI };
   function activate(tab, fromHash){
     if (!R[tab]) tab = 'days';
     curTab = tab;

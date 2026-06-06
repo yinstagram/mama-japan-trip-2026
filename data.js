@@ -11,6 +11,7 @@ window.TRIP = {
     route: "宇都宮 → 水戶 → 土浦",
     updated: "2026-06-04 深化版",
     note: "行得唔急 · 安全第一 · 6 月梅雨季當會落雨準備",
+    aiKey: "d52e646f9dd94190b5ccc08988df4cd3.V7GvwDR3SQDo18dm",
   },
 
   alerts: [
