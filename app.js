@@ -476,9 +476,10 @@
 
   function scrollAIBottom(){
     setTimeout(function(){
+      var form = document.getElementById('chatForm');
+      if(form){ form.scrollIntoView({behavior:'smooth', block:'nearest'}); return; }
       var el = document.getElementById('chatMsgs');
-      if(el) el.lastElementChild && el.lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      if(el && el.lastElementChild) el.lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
     }, 80);
   }
 
